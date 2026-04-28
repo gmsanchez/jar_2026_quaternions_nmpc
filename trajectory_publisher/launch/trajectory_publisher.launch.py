@@ -45,7 +45,7 @@ def generate_launch_description():
     # scale_factor = 0.1
     
     # Path 02 (modified)
-    waypoints_x = [1.0, 6.0, 12.5, 5.0, 7.5, 3.0, -1.0]
+    waypoints_x = [1.0, 6.0, 12.5, 5.0, 7.5, 3.0, -3.0]
     waypoints_y = [0.0, 0.0, 5.0, 6.5, 3.0, 5.0, -2.0]
     scale_factor = 0.75
     
