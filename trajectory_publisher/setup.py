@@ -30,6 +30,7 @@ setup(
     entry_points={
         'console_scripts': [
             'cubic_spline_publisher = trajectory_publisher.cubic_spline_trajectory_publisher:main',
+            'square_publisher = trajectory_publisher.square_trajectory_publisher:main',
             'trajectory_recorder = trajectory_publisher.trajectory_recorder:main'
         ],
     },
