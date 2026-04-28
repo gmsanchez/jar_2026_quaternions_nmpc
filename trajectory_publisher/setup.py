@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'cubic_spline_publisher = trajectory_publisher.cubic_spline_trajectory_publisher:main',
         ],
     },
 )
