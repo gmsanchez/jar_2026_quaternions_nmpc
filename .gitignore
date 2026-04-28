@@ -1,0 +1,8 @@
+# Python artifacts
+__pycache__/
+
+.DS_Store
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
