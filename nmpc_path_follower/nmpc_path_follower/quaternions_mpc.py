@@ -174,19 +174,18 @@ class QuaternionsMPCNode(Node):
         msg.header.frame_id = self.frame_id
         
         # Stop condition logic to check if we are "close enough"
-        if np.hypot(dx, dy) < 0.05:
-            msg.twist.linear.x = 0.0
-            msg.twist.angular.z = 0.0
-        #     # Optional: Add logic here to stop the timer or signal success
+        if self.ind >= (self.path_len-1) and np.hypot(dx, dy) < 0.05:
+            self.velocity_publisher.publish(TwistStamped())
+            self.get_logger().info("Path Done!!")
+            
+            self.destroy_node()
+            raise SystemExit
         else:
             U_sol, e_t, i_c, status = self.mpc.solve(self.x0)
             self.get_logger().info("%d: %s %d iterations in %.6f seconds" % ( self.get_clock().now().nanoseconds ,status, i_c, e_t))
             
-            v = U_sol[0]
-            w = U_sol[5]
-            
-            msg.twist.linear.x = v
-            msg.twist.angular.z = w 
+            msg.twist.linear.x = U_sol[0]
+            msg.twist.angular.z = U_sol[5]
         
         self.get_logger().info("vx: %.4f - wz: %.4f" % (msg.twist.linear.x, msg.twist.angular.z))
         # self.get_logger().info("dx: %.4f - dy: %.4f" % (dx, dy))
