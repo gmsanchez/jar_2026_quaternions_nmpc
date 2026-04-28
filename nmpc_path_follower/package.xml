@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>nmpc_path_follower</name>
+  <version>1.0.0</version>
+  <description>A ROS2 package that uses NMPC to control a UGV along a given path.</description>
+  <maintainer email="acapovilla@sinc.unl.edu.ar">Agustín Capovilla</maintainer>
+  <maintainer email="gsanchez@sinc.unl.edu.ar">Guido Sanchez</maintainer>
+  <license>TODO: License declaration</license>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
