@@ -203,12 +203,12 @@ class EulerMPCNode(Node):
             self.get_logger().info("Path Done!!")
             
             _dt_object = datetime.fromtimestamp(self.get_clock().now().nanoseconds / 1e9)
-            _filename = _dt_object.strftime("%Y-%m-%d_%H-%M-%S_Quaternions") + ".npz"
+            _filename = _dt_object.strftime("%Y-%m-%d_%H-%M-%S_Euler") + ".npz"
             np.savez(_filename, t=self.hist_t,
                      x_sp=self.hist_Xsp, x0=self.hist_X0, u0=self.hist_U0,
                      i_c=self.hist_iter, e_t=self.hist_et,
                      path_x=self.path_x, path_y=self.path_y, path_qw=self.path_qw, path_qz=self.path_qz, path_yaw=self.path_yaw,
-                     Q_pos=self.mpc.Q_pos, Q_q=self.mpc.Q_q, Qn_pos=self.mpc.Qn_pos, Qn_q=self.mpc.Qn_q,
+                     Q_pos=self.mpc.Q_pos, Q_yaw=self.mpc.Q_yaw, Qn_pos=self.mpc.Qn_pos, Qn_yaw=self.mpc.Qn_yaw,
                      R=self.mpc.R
             )
             
