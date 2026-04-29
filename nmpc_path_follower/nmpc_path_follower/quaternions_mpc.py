@@ -12,6 +12,7 @@ from visualization_msgs.msg import Marker
 from nmpc_path_follower.RigidBodyQuaternion import RigidBodyQuaternions
 
 import numpy as np
+from datetime import datetime
 
 # Transformation helper to get Yaw from Quaternion
 def get_yaw_from_quaternion(q):
@@ -40,6 +41,7 @@ class QuaternionsMPCNode(Node):
         
         # Publishers & Subscribers
         self.velocity_publisher = self.create_publisher(TwistStamped, '/skd1_base_controller/cmd_vel', 10)
+        
         self.odom_subscriber = self.create_subscription(Odometry, '/ground_truth/odometry', self.odom_callback, 10)
         
         self.first_path_msg, self.plan = wait_for_message(
@@ -89,8 +91,8 @@ class QuaternionsMPCNode(Node):
         # Goal State (x, y, yaw)
         self.goal_x = 10.0
         self.goal_y = 10.0
-        self.goal_yaw = np.pi / 2        
-        
+        self.goal_yaw = np.pi / 2
+
         self.mpc = RigidBodyQuaternions(self.N, self.dt)
         self.mpc.setup()
         self.mpc.set_x0(self.x0)
@@ -98,13 +100,14 @@ class QuaternionsMPCNode(Node):
         
         # Update Reference
         # self.mpc.update_reference(self.x_sp)
-    
-        self.timer = self.create_timer(self.dt, self.control_loop)
+        self.hist_t = []
+        self.hist_X0 = []
+        self.hist_U0 = []
+        self.hist_Xsp = []
+        self.hist_iter = []
+        self.hist_et = []
         
-        self.path = Path()
-        self.last_path_x = 0.0
-        self.last_path_y = 0.0
-        self.dist_threshold = 0.01  # Update path every 10cm
+        self.timer = self.create_timer(self.dt, self.control_loop)
         
         # Marcadores de la ventana
         self.marker_pub = self.create_publisher(Marker, 'markers', 10)
@@ -140,6 +143,8 @@ class QuaternionsMPCNode(Node):
             path_y = self.path_y,
             current_ind = self.ind,
         )
+        
+        self.get_logger().info("Waypoint %d of %d" % (self.ind, self.path_len))
         
         self.x_sp = np.zeros((self.Nx, self.N+1))
         # Ventana completa dentro del Path
@@ -178,11 +183,28 @@ class QuaternionsMPCNode(Node):
             self.velocity_publisher.publish(TwistStamped())
             self.get_logger().info("Path Done!!")
             
+            _dt_object = datetime.fromtimestamp(self.get_clock().now().nanoseconds / 1e9)
+            _filename = _dt_object.strftime("%Y-%m-%d_%H-%M-%S_Quaternions") + ".npz"
+            np.savez(_filename, t=self.hist_t,
+                     x_sp=self.hist_Xsp, x0=self.hist_X0, u0=self.hist_U0,
+                     i_c=self.hist_iter, e_t=self.hist_et,
+                     path_x=self.path_x, path_y=self.path_y, path_qw=self.path_qw, path_qz=self.path_qz, path_yaw=self.path_yaw,
+                     Q_pos=self.mpc.Q_pos, Q_q=self.mpc.Q_q, Qn_pos=self.mpc.Qn_pos, Qn_q=self.mpc.Qn_q,
+                     R=self.mpc.R
+            )
+            
             self.destroy_node()
             raise SystemExit
         else:
+            self.hist_t.append(self.get_clock().now().nanoseconds)
+            self.hist_Xsp.append(self.x_sp.copy())
+            self.hist_X0.append(self.x0.copy())
             U_sol, e_t, i_c, status = self.mpc.solve(self.x0)
-            self.get_logger().info("%d: %s %d iterations in %.6f seconds" % ( self.get_clock().now().nanoseconds ,status, i_c, e_t))
+                        
+            self.get_logger().debug("%d: %s %d iterations in %.6f seconds" % ( self.get_clock().now().nanoseconds ,status, i_c, e_t))
+            self.hist_U0.append(np.copy(U_sol))
+            self.hist_iter.append(i_c)
+            self.hist_et.append(e_t)
             
             msg.twist.linear.x = U_sol[0]
             msg.twist.angular.z = U_sol[5]
@@ -242,7 +264,7 @@ def main(args=None):
         print('\n')
         pass
     else:
-        # 4. Finalización 
+        # 4. Finalización
         rclpy.shutdown()
 
 
