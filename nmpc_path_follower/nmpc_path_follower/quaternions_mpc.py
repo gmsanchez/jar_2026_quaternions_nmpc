@@ -30,8 +30,8 @@ def calc_nearest_index(x, y, path_x, path_y, current_ind):
     mind = np.sqrt(mind)
 
     ind = np.argmin(d)
-    # if ind < current_ind:
-    #     ind = current_ind
+    if ind < current_ind:
+        ind = current_ind
 
     return ind, mind
 
@@ -179,7 +179,7 @@ class QuaternionsMPCNode(Node):
         msg.header.frame_id = self.frame_id
         
         # Stop condition logic to check if we are "close enough"
-        if self.ind >= (self.path_len-1) and np.hypot(dx, dy) < 0.05:
+        if self.ind >= (self.path_len-1) or np.hypot(dx, dy) < 0.1:
             self.velocity_publisher.publish(TwistStamped())
             self.get_logger().info("Path Done!!")
             
