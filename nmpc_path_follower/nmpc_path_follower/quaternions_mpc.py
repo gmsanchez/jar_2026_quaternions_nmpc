@@ -87,6 +87,7 @@ class QuaternionsMPCNode(Node):
         
         # Punto inicial del path
         self.ind = 0
+        self.old_nearest_point_index = None
         
         # Goal State (x, y, yaw)
         self.goal_x = 10.0
@@ -143,6 +144,7 @@ class QuaternionsMPCNode(Node):
             path_y = self.path_y,
             current_ind = self.ind,
         )
+        # self.ind, _ = self.search_target_index()
         
         self.get_logger().info("Waypoint %d of %d" % (self.ind, self.path_len))
         
@@ -217,6 +219,59 @@ class QuaternionsMPCNode(Node):
         
         
         self.publish_reference_window_markers()
+    
+    def search_target_index(self):
+        
+        # To speed up nearest point search, doing it at only first time.
+        if self.old_nearest_point_index is None:
+            # search nearest point index
+            dx = self.current_x - self.path_x
+            dy = self.current_y - self.path_y
+            d = dx ** 2 + dy ** 2
+            # d = np.hypot(dx, dy)
+            ind = np.argmin(d)
+            
+            self.old_nearest_point_index = ind
+        else:
+            ind = self.old_nearest_point_index
+            # Distancia al punto objetivo actual
+            distance_this_index = np.hypot(
+                self.current_x - self.path_x[ind],
+                self.current_y - self.path_y[ind]
+            )
+            
+            # while True:
+            while (ind + 1) < self.path_len:
+                distance_next_index = np.hypot(
+                    self.current_x - self.path_x[ind+1],
+                    self.current_y - self.path_y[ind+1]
+                )
+                
+                if distance_this_index < distance_next_index:       # Creo que acá iría "<="
+                    break
+                
+                ind = ind + 1 if (ind + 1) < self.path_len else ind
+                
+                distance_this_index = distance_next_index
+
+            self.old_nearest_point_index = ind
+
+        # self.k = 0.0    # look forward gain
+        # self.v =        # VELOCIDAD ACTUAL DEL VEHÍCULO
+        self.Lfc = 0.1  # [m] look-ahead distance
+        # Lf = self.k * self.v + self.Lfc  # update look ahead distance
+        Lf = self.Lfc
+
+        # search look ahead target point index
+        while Lf > np.hypot(
+                    self.current_x - self.path_x[ind],
+                    self.current_y - self.path_y[ind]
+        ):
+            if (ind + 1) >= self.path_len:
+                break  # not exceed goal
+            ind += 1
+
+        return ind, Lf
     
     def publish_reference_window_markers(self):
         self.marker_msg = Marker()
