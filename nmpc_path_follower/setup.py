@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'run_mpc_minimal = nmpc_path_follower.MPC_minimal:main',
             'quaternions_mpc_controller = nmpc_path_follower.quaternions_mpc:main',
+            'euler_mpc_controller = nmpc_path_follower.euler_mpc:main',
         ],
     },
 )
